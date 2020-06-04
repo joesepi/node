@@ -127,6 +127,7 @@
       'lib/internal/crypto/keygen.js',
       'lib/internal/crypto/keys.js',
       'lib/internal/crypto/pbkdf2.js',
+      'lib/internal/crypto/promises.js',
       'lib/internal/crypto/random.js',
       'lib/internal/crypto/scrypt.js',
       'lib/internal/crypto/sig.js',
