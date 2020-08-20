@@ -98,13 +98,12 @@ help: ## Print help for targets with comments.
 # and recreated which can break the addons build when running test-ci
 # See comments on the build-addons target for some more info
 ifeq ($(BUILD_WITH), make)
-$(NODE_EXE): config.gypi out/Makefile
-	$(MAKE) -C out BUILDTYPE=Release V=$(V)
-	if [ ! -r $@ -o ! -L $@ ]; then ln -fs out/Release/$(NODE_EXE) $@; fi
-
-$(NODE_G_EXE): config.gypi out/Makefile
-	$(MAKE) -C out BUILDTYPE=Debug V=$(V)
-	if [ ! -r $@ -o ! -L $@ ]; then ln -fs out/Debug/$(NODE_EXE) $@; fi
+$(NODE_EXE): build_type:=Release
+$(NODE_G_EXE): build_type:=Debug
+$(NODE_EXE) $(NODE_G_EXE): config.gypi out/Makefile
+	$(MAKE) -C out BUILDTYPE=${build_type} V=$(V)
+	if [ ! -r $@ -o ! -L $@ ]; then \
+	  ln -fs out/${build_type}/$(NODE_EXE) $@; fi
 else
 ifeq ($(BUILD_WITH), ninja)
 ifeq ($(V),1)
@@ -299,8 +298,8 @@ v8:
 jstest: build-addons build-js-native-api-tests build-node-api-tests ## Runs addon tests and JS tests
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) \
 		--skip-tests=$(CI_SKIP_TESTS) \
-		$(CI_JS_SUITES) \
-		$(CI_NATIVE_SUITES)
+		$(JS_SUITES) \
+		$(NATIVE_SUITES)
 
 .PHONY: tooltest
 tooltest:
@@ -493,9 +492,11 @@ test-all-valgrind: test-build
 test-all-suites: | clear-stalled test-build bench-addons-build doc-only ## Run all test suites.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) test/*
 
+JS_SUITES ?= default
+NATIVE_SUITES ?= addons js-native-api node-api
 # CI_* variables should be kept synchronized with the ones in vcbuild.bat
-CI_NATIVE_SUITES ?= addons js-native-api node-api
-CI_JS_SUITES ?= default
+CI_NATIVE_SUITES ?= $(NATIVE_SUITES) benchmark
+CI_JS_SUITES ?= $(JS_SUITES)
 ifeq ($(node_use_openssl), false)
 	CI_DOC := doctool
 else
@@ -506,7 +507,7 @@ endif
 # Build and test addons without building anything else
 # Related CI job: node-test-commit-arm-fanned
 test-ci-native: LOGLEVEL := info
-test-ci-native: | test/addons/.buildstamp test/js-native-api/.buildstamp test/node-api/.buildstamp
+test-ci-native: | benchmark/napi/.buildstamp test/addons/.buildstamp test/js-native-api/.buildstamp test/node-api/.buildstamp
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
 		$(TEST_CI_ARGS) $(CI_NATIVE_SUITES)
@@ -528,7 +529,7 @@ test-ci-js: | clear-stalled
 .PHONY: test-ci
 # Related CI jobs: most CI tests, excluding node-test-commit-arm-fanned
 test-ci: LOGLEVEL := info
-test-ci: | clear-stalled build-addons build-js-native-api-tests build-node-api-tests doc-only
+test-ci: | clear-stalled bench-addons-build build-addons build-js-native-api-tests build-node-api-tests doc-only
 	out/Release/cctest --gtest_output=xml:out/junit/cctest.xml
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
@@ -655,8 +656,8 @@ test-with-async-hooks:
 	$(MAKE) build-node-api-tests
 	$(MAKE) cctest
 	NODE_TEST_WITH_ASYNC_HOOKS=1 $(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) \
-		$(CI_JS_SUITES) \
-		$(CI_NATIVE_SUITES)
+		$(JS_SUITES) \
+		$(NATIVE_SUITES)
 
 
 .PHONY: test-v8
@@ -1035,7 +1036,7 @@ pkg-upload: pkg
 	scp -p $(TARNAME).pkg $(STAGINGSERVER):nodejs/$(DISTTYPEDIR)/$(FULLVERSION)/$(TARNAME).pkg
 	ssh $(STAGINGSERVER) "touch nodejs/$(DISTTYPEDIR)/$(FULLVERSION)/$(TARNAME).pkg.done"
 
-$(TARBALL): release-only $(NODE_EXE) doc
+$(TARBALL): release-only doc-only
 	git checkout-index -a -f --prefix=$(TARNAME)/
 	mkdir -p $(TARNAME)/doc/api
 	cp doc/node.1 $(TARNAME)/doc/node.1
@@ -1244,8 +1245,9 @@ lint-js:
 jslint: lint-js
 	@echo "Please use lint-js instead of jslint"
 
-run-lint-js-ci = tools/lint-js.js $(PARALLEL_ARGS) -f tap -o test-eslint.tap \
-		$(LINT_JS_TARGETS)
+run-lint-js-ci = tools/node_modules/eslint/bin/eslint.js \
+  --report-unused-disable-directives --ext=.js,.mjs,.md -f tap \
+	-o test-eslint.tap $(LINT_JS_TARGETS)
 
 .PHONY: lint-js-ci
 # On the CI the output is emitted in the TAP format.
@@ -1266,7 +1268,7 @@ LINT_CPP_EXCLUDE += $(wildcard test/js-native-api/??_*/*.cc test/js-native-api/?
 LINT_CPP_EXCLUDE += src/tracing/trace_event.h src/tracing/trace_event_common.h
 
 LINT_CPP_FILES = $(filter-out $(LINT_CPP_EXCLUDE), $(wildcard \
-	benchmark/napi/function_call/binding.cc \
+	benchmark/napi/*/*.cc \
 	src/*.c \
 	src/*.cc \
 	src/*.h \
@@ -1334,7 +1336,7 @@ lint-cpp: tools/.cpplintstamp
 tools/.cpplintstamp: $(LINT_CPP_FILES)
 	@echo "Running C++ linter..."
 	@$(PYTHON) tools/cpplint.py $(CPPLINT_QUIET) $?
-	@$(PYTHON) tools/checkimports.py
+	@$(PYTHON) tools/checkimports.py $?
 	@touch $@
 
 .PHONY: lint-addon-docs

@@ -38,7 +38,7 @@ Occasionally, the deprecation of an API may be reversed. In such situations,
 this document will be updated with information relevant to the decision.
 However, the deprecation identifier will not be modified.
 
-## List of Deprecated APIs
+## List of deprecated APIs
 
 <a id="DEP0001"></a>
 ### DEP0001: `http.OutgoingMessage.prototype.flush`
@@ -1647,7 +1647,7 @@ Type: End-of-Life
 `REPLServer.turnOffEditorMode()` was removed from userland visibility.
 
 <a id="DEP0079"></a>
-### DEP0079: Custom inspection function on Objects via `.inspect()`
+### DEP0079: Custom inspection function on objects via `.inspect()`
 <!-- YAML
 changes:
   - version: v11.0.0
@@ -1775,7 +1775,7 @@ manager, as it is published on the npm registry under the same name. No source
 code modification is necessary if that is done.
 
 <a id="DEP0085"></a>
-### DEP0085: AsyncHooks Sensitive API
+### DEP0085: AsyncHooks sensitive API
 <!-- YAML
 changes:
   - version: 10.0.0
@@ -1790,7 +1790,7 @@ changes:
 
 Type: End-of-Life
 
-The AsyncHooks Sensitive API was never documented and had various minor issues.
+The AsyncHooks sensitive API was never documented and had various minor issues.
 Use the `AsyncResource` API instead. See
 <https://github.com/nodejs/node/issues/15572>.
 
@@ -1954,7 +1954,7 @@ should start using the `async_context` variant of `MakeCallback` or
 `CallbackScope`, or the high-level `AsyncResource` class.
 
 <a id="DEP0098"></a>
-### DEP0098: AsyncHooks Embedder `AsyncResource.emitBefore` and `AsyncResource.emitAfter` APIs
+### DEP0098: AsyncHooks embedder `AsyncResource.emitBefore` and `AsyncResource.emitAfter` APIs
 <!-- YAML
 changes:
   - version: v12.0.0
@@ -1979,7 +1979,7 @@ safer, and more convenient, alternative. See
 <https://github.com/nodejs/node/pull/18513>.
 
 <a id="DEP0099"></a>
-### DEP0099: async context-unaware `node::MakeCallback` C++ APIs
+### DEP0099: Async context-unaware `node::MakeCallback` C++ APIs
 <!-- YAML
 changes:
   - version: v10.0.0
@@ -2336,7 +2336,7 @@ Type: Documentation-only (supports [`--pending-deprecation`][])
 [`util.getSystemErrorName()`][] instead.
 
 <a id="DEP0120"></a>
-### DEP0120: Windows Performance Counter Support
+### DEP0120: Windows Performance Counter support
 <!-- YAML
 changes:
   - version: v12.0.0
@@ -2719,10 +2719,22 @@ native modules. It was incomplete so far and instead it's better to rely upon
 `require('module').builtinModules`.
 
 <a id="DEP0143"></a>
-### DEP0143: `module.parent`
+### DEP0143: `Transform._transformState`
 <!-- YAML
 changes:
-  - version: REPLACEME
+  - version: v14.5.0
+    pr-url: https://github.com/nodejs/node/pull/33126
+    description: Runtime deprecation.
+-->
+Type: Runtime
+`Transform._transformState` will be removed in future versions where it is
+no longer required due to simplification of the implementation.
+
+<a id="DEP0144"></a>
+### DEP0144: `module.parent`
+<!-- YAML
+changes:
+  - version: v14.6.0
     pr-url: https://github.com/nodejs/node/pull/32217
     description: Documentation-only deprecation.
 -->
@@ -2751,12 +2763,39 @@ const moduleParents = Object.values(require.cache)
   .filter((m) => m.children.includes(module));
 ```
 
+<a id="DEP0145"></a>
+### DEP0145: `socket.bufferSize`
+<!-- YAML
+changes:
+  - version: v14.6.0
+    pr-url: https://github.com/nodejs/node/pull/34088
+    description: Documentation-only deprecation.
+-->
+
+Type: Documentation-only
+
+[`socket.bufferSize`][] is just an alias for [`writable.writableLength`][].
+
+<a id="DEP0XXX"></a>
+### DEP0XXX: `new crypto.Certificate()`
+<!-- YAML
+changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/34697
+    description: Documentation-only deprecation.
+-->
+
+Type: Documentation-only
+
+The [`crypto.Certificate()` constructor][] is deprecated. Use
+[static methods of `crypto.Certificate()`][] instead.
+
 [`--pending-deprecation`]: cli.html#cli_pending_deprecation
 [`--throw-deprecation`]: cli.html#cli_throw_deprecation
-[`Buffer.allocUnsafeSlow(size)`]: buffer.html#buffer_class_method_buffer_allocunsafeslow_size
-[`Buffer.from(array)`]: buffer.html#buffer_class_method_buffer_from_array
-[`Buffer.from(buffer)`]: buffer.html#buffer_class_method_buffer_from_buffer
-[`Buffer.isBuffer()`]: buffer.html#buffer_class_method_buffer_isbuffer_obj
+[`Buffer.allocUnsafeSlow(size)`]: buffer.html#buffer_static_method_buffer_allocunsafeslow_size
+[`Buffer.from(array)`]: buffer.html#buffer_static_method_buffer_from_array
+[`Buffer.from(buffer)`]: buffer.html#buffer_static_method_buffer_from_buffer
+[`Buffer.isBuffer()`]: buffer.html#buffer_static_method_buffer_isbuffer_obj
 [`Cipher`]: crypto.html#crypto_class_cipher
 [`Decipher`]: crypto.html#crypto_class_decipher
 [`EventEmitter.listenerCount(emitter, eventName)`]: events.html#events_eventemitter_listenercount_emitter_eventname
@@ -2773,6 +2812,7 @@ const moduleParents = Object.values(require.cache)
 [`clearTimeout()`]: timers.html#timers_cleartimeout_timeout
 [`console.error()`]: console.html#console_console_error_data_args
 [`console.log()`]: console.html#console_console_log_data_args
+[`crypto.Certificate()` constructor]: crypto.html#crypto_legacy_api
 [`crypto.DEFAULT_ENCODING`]: crypto.html#crypto_crypto_default_encoding
 [`crypto.createCipher()`]: crypto.html#crypto_crypto_createcipher_algorithm_password_options
 [`crypto.createCipheriv()`]: crypto.html#crypto_crypto_createcipheriv_algorithm_key_iv_options
@@ -2803,7 +2843,7 @@ const moduleParents = Object.values(require.cache)
 [`http.request()`]: http.html#http_http_request_options_callback
 [`https.get()`]: https.html#https_https_get_options_callback
 [`https.request()`]: https.html#https_https_request_options_callback
-[`module.createRequire()`]: modules.html#modules_module_createrequire_filename
+[`module.createRequire()`]: module.html#module_module_createrequire_filename
 [`os.networkInterfaces()`]: os.html#os_os_networkinterfaces
 [`os.tmpdir()`]: os.html#os_os_tmpdir
 [`process.env`]: process.html#process_process_env
@@ -2824,12 +2864,13 @@ const moduleParents = Object.values(require.cache)
 [`script.createCachedData()`]: vm.html#vm_script_createcacheddata
 [`setInterval()`]: timers.html#timers_setinterval_callback_delay_args
 [`setTimeout()`]: timers.html#timers_settimeout_callback_delay_args
+[`socket.bufferSize`]: net.html#net_socket_buffersize
 [`timeout.ref()`]: timers.html#timers_timeout_ref
 [`timeout.refresh()`]: timers.html#timers_timeout_refresh
 [`timeout.unref()`]: timers.html#timers_timeout_unref
-[`tls.CryptoStream`]: tls.html#tls_class_cryptostream
+[`tls.CryptoStream`]: tls.html#tls_class_tls_cryptostream
 [`tls.SecureContext`]: tls.html#tls_tls_createsecurecontext_options
-[`tls.SecurePair`]: tls.html#tls_class_securepair
+[`tls.SecurePair`]: tls.html#tls_class_tls_securepair
 [`tls.TLSSocket`]: tls.html#tls_class_tls_tlssocket
 [`tls.checkServerIdentity()`]: tls.html#tls_tls_checkserveridentity_hostname_cert
 [`tls.createSecureContext()`]: tls.html#tls_tls_createsecurecontext_options
@@ -2860,13 +2901,15 @@ const moduleParents = Object.values(require.cache)
 [`util`]: util.html
 [`worker.exitedAfterDisconnect`]: cluster.html#cluster_worker_exitedafterdisconnect
 [`worker.terminate()`]: worker_threads.html#worker_threads_worker_terminate
+[`writable.writableLength`]: stream.html#stream_writable_writablelength
 [`zlib.bytesWritten`]: zlib.html#zlib_zlib_byteswritten
 [Legacy URL API]: url.html#url_legacy_url_api
 [NIST SP 800-38D]: https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
 [RFC 6066]: https://tools.ietf.org/html/rfc6066#section-3
 [WHATWG URL API]: url.html#url_the_whatwg_url_api
-[alloc]: buffer.html#buffer_class_method_buffer_alloc_size_fill_encoding
-[alloc_unsafe_size]: buffer.html#buffer_class_method_buffer_allocunsafe_size
-[from_arraybuffer]: buffer.html#buffer_class_method_buffer_from_arraybuffer_byteoffset_length
-[from_string_encoding]: buffer.html#buffer_class_method_buffer_from_string_encoding
+[alloc]: buffer.html#buffer_static_method_buffer_alloc_size_fill_encoding
+[alloc_unsafe_size]: buffer.html#buffer_static_method_buffer_allocunsafe_size
+[from_arraybuffer]: buffer.html#buffer_static_method_buffer_from_arraybuffer_byteoffset_length
+[from_string_encoding]: buffer.html#buffer_static_method_buffer_from_string_encoding
 [legacy `urlObject`]: url.html#url_legacy_urlobject
+[static methods of `crypto.Certificate()`]: crypto.html#crypto_class_certificate

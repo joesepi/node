@@ -271,6 +271,16 @@ assert.throws(
   }
 );
 
+assert.rejects(
+  () => crypto.promises.randomBytes((-1 >>> 0) + 1),
+  {
+    code: 'ERR_OUT_OF_RANGE',
+    name: 'RangeError',
+    message: 'The value of "size" is out of range. ' +
+             `It must be >= 0 && <= ${kMaxPossibleLength}. Received 4294967296`
+  }
+);
+
 [1, true, NaN, null, undefined, {}, []].forEach((i) => {
   const buf = Buffer.alloc(10);
   assert.throws(

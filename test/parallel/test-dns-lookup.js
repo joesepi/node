@@ -72,7 +72,8 @@ assert.throws(() => {
   const err = {
     code: 'ERR_INVALID_OPT_VALUE',
     name: 'TypeError',
-    message: 'The value "20" is invalid for option "family"'
+    message: 'The value "20" is invalid for option "family". ' +
+    'Must be one of: 0, 4, 6'
   };
   const options = {
     hints: 0,
@@ -109,7 +110,7 @@ assert.throws(() => {
     all: false
   });
   assert.deepStrictEqual(res, { address: '127.0.0.1', family: 4 });
-})();
+})().then(common.mustCall());
 
 dns.lookup(false, {
   hints: 0,

@@ -43,6 +43,7 @@ module.exports = {
     {
       files: [
         'doc/api/esm.md',
+        'doc/api/module.md',
         'doc/api/modules.md',
         'test/es-module/test-esm-type-flag.js',
         'test/es-module/test-esm-type-flag-alias.js',
@@ -280,6 +281,7 @@ module.exports = {
     'node-core/no-duplicate-requires': 'error',
   },
   globals: {
+    AbortController: 'readable',
     Atomics: 'readable',
     BigInt: 'readable',
     BigInt64Array: 'readable',

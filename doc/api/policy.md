@@ -49,7 +49,7 @@ node --experimental-policy=policy.json --policy-integrity="sha384-SggXRQHwCG8g+D
 
 ## Features
 
-### Error Behavior
+### Error behavior
 
 When a policy check fails, Node.js by default will throw an error.
 It is possible to change the error behavior to one of a few possibilities
@@ -73,7 +73,7 @@ available to change the behavior:
 }
 ```
 
-### Integrity Checks
+### Integrity checks
 
 Policy files must use integrity checks with Subresource Integrity strings
 compatible with the browser
@@ -115,7 +115,7 @@ body for the resource which can be useful for local development. It is not
 recommended in production since it would allow unexpected alteration of
 resources to be considered valid.
 
-### Dependency Redirection
+### Dependency redirection
 
 An application may need to ship patched versions of modules or to prevent
 modules from allowing all modules access to all other modules. Redirection
@@ -124,24 +124,25 @@ replaced.
 
 ```json
 {
-  "builtins": [],
   "resources": {
     "./app/checked.js": {
       "dependencies": {
         "fs": true,
-        "os": "./app/node_modules/alt-os"
+        "os": "./app/node_modules/alt-os",
+        "http": { "import": true }
       }
     }
   }
 }
 ```
 
-The dependencies are keyed by the requested string specifier and have values
-of either `true` or a string pointing to a module that will be resolved.
+The dependencies are keyed by the requested specifier string and have values
+of either `true`, `null`, a string pointing to a module that will be resolved,
+or a conditions object.
 
 The specifier string does not perform any searching and must match exactly
-what is provided to the `require()`. Therefore, multiple specifiers may be
-needed in the policy if `require()` uses multiple different strings to point
+what is provided to the `require()` or `import`. Therefore, multiple specifiers
+may be needed in the policy if it uses multiple different strings to point
 to the same module (such as excluding the extension).
 
 If the value of the redirection is `true` the default searching algorithms will
@@ -150,21 +151,32 @@ be used to find the module.
 If the value of the redirection is a string, it will be resolved relative to
 the manifest and then immediately be used without searching.
 
-Any specifier string that is `require()`ed and not listed in the dependencies
-will result in an error according to the policy.
+Any specifier string that is attempted to resolved and not listed in the
+dependencies will result in an error according to the policy.
 
 Redirection will not prevent access to APIs through means such as direct access
 to `require.cache` and/or through `module.constructor` which allow access to
-loading modules. Policy redirection only affect specifiers to `require()`.
-Other means such as to prevent undesired access to APIs through variables are
-necessary to lock down that path of loading modules.
+loading modules. Policy redirection only affect specifiers to `require()` and
+`import`. Other means such as to prevent undesired access to APIs through
+variables are necessary to lock down that path of loading modules.
 
 A boolean value of `true` for the dependencies map can be specified to allow a
 module to load any specifier without redirection. This can be useful for local
 development and may have some valid usage in production, but should be used
 only with care after auditing a module to ensure its behavior is valid.
 
-#### Example: Patched Dependency
+Similar to `"exports"` in `package.json` dependencies can also be specified to
+be objects containing conditions which branch how dependencies are loaded. In
+the above example `"http"` will be allowed when the `"import"` condition is
+part of loading it.
+
+A value of `null` for the resolved value will cause the resolution to fail.
+This can be used to ensure some kinds dynamic access are explicitly prevented.
+
+Unknown values for the resolved module location will cause failure, but are
+not guaranteed to be forwards compatible.
+
+#### Example: Patched dependency
 
 Redirected dependencies can provide attenuated or modified functionality as fits
 the application. For example, log data about timing of function durations by

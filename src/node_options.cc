@@ -118,6 +118,8 @@ void EnvironmentOptions::CheckOptions(std::vector<std::string>* errors) {
   }
 
   if (!unhandled_rejections.empty() &&
+      unhandled_rejections != "warn-with-error-code" &&
+      unhandled_rejections != "throw" &&
       unhandled_rejections != "strict" &&
       unhandled_rejections != "warn" &&
       unhandled_rejections != "none") {
@@ -144,6 +146,10 @@ void EnvironmentOptions::CheckOptions(std::vector<std::string>* errors) {
     }
   }
 
+  if (cpu_prof && cpu_prof_dir.empty() && !diagnostic_dir.empty()) {
+      cpu_prof_dir = diagnostic_dir;
+    }
+
   if (!heap_prof) {
     if (!heap_prof_name.empty()) {
       errors->push_back("--heap-prof-name must be used with --heap-prof");
@@ -157,6 +163,11 @@ void EnvironmentOptions::CheckOptions(std::vector<std::string>* errors) {
       errors->push_back("--heap-prof-interval must be used with --heap-prof");
     }
   }
+
+  if (heap_prof && heap_prof_dir.empty() && !diagnostic_dir.empty()) {
+    heap_prof_dir = diagnostic_dir;
+  }
+
   debug_options_.CheckOptions(errors);
 #endif  // HAVE_INSPECTOR
 }
@@ -270,10 +281,22 @@ DebugOptionsParser::DebugOptionsParser() {
 }
 
 EnvironmentOptionsParser::EnvironmentOptionsParser() {
+  AddOption("--conditions",
+            "additional user conditions for conditional exports and imports",
+            &EnvironmentOptions::conditions,
+            kAllowedInEnvironment);
+  AddAlias("-u", "--conditions");
+  AddOption("--diagnostic-dir",
+            "set dir for all output files"
+            " (default: current working directory)",
+            &EnvironmentOptions::diagnostic_dir,
+            kAllowedInEnvironment);
   AddOption("--enable-source-maps",
             "experimental Source Map V3 support",
             &EnvironmentOptions::enable_source_maps,
             kAllowedInEnvironment);
+  AddOption("--experimental-abortcontroller", "",
+            NoOp{}, kAllowedInEnvironment);
   AddOption("--experimental-json-modules",
             "experimental JSON interop support for the ES Module loader",
             &EnvironmentOptions::experimental_json_modules,
@@ -597,12 +620,13 @@ PerIsolateOptionsParser::PerIsolateOptionsParser(
   Implies("--report-signal", "--report-on-signal");
 
   AddOption("--experimental-top-level-await",
-            "enable experimental support for ECMAScript Top-Level Await",
+            "",
             &PerIsolateOptions::experimental_top_level_await,
             kAllowedInEnvironment);
   AddOption("--harmony-top-level-await", "", V8Option{});
   Implies("--experimental-top-level-await", "--harmony-top-level-await");
   Implies("--harmony-top-level-await", "--experimental-top-level-await");
+  ImpliesNot("--no-harmony-top-level-await", "--experimental-top-level-await");
 
   Insert(eop, &PerIsolateOptions::get_per_env_options);
 }
@@ -829,7 +853,8 @@ std::string GetBashCompletion() {
          "    return 0\n"
          "  fi\n"
          "}\n"
-         "complete -F _node_complete node node_g";
+         "complete -o filenames -o nospace -o bashdefault "
+         "-F _node_complete node node_g";
   return out.str();
 }
 
@@ -972,6 +997,12 @@ void Initialize(Local<Object> target,
   target
       ->Set(
           context, FIXED_ONE_BYTE_STRING(isolate, "envSettings"), env_settings)
+      .Check();
+
+  target
+      ->Set(context,
+            FIXED_ONE_BYTE_STRING(env->isolate(), "shouldNotRegisterESMLoader"),
+            Boolean::New(isolate, env->should_not_register_esm_loader()))
       .Check();
 
   Local<Object> types = Object::New(isolate);
