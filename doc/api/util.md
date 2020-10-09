@@ -1337,7 +1337,7 @@ is not supported.
 added: v8.3.0
 changes:
   - version: v11.0.0
-    pr-url: v11.0.0
+    pr-url: https://github.com/nodejs/node/pull/22281
     description: The class is now available on the global object.
 -->
 
@@ -1398,7 +1398,7 @@ mark.
 added: v8.3.0
 changes:
   - version: v11.0.0
-    pr-url: v11.0.0
+    pr-url: https://github.com/nodejs/node/pull/22281
     description: The class is now available on the global object.
 -->
 
